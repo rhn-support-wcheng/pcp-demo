@@ -1,0 +1,34 @@
+---
+- name: Install Grafana
+  hosts: pcp-master
+  tasks:
+    - name: Install redis grafana grafana-pcp to latest
+      yum:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - redis
+        - grafana
+        - grafana-pcp
+
+    - name: Enable firewall 3000 port
+      firewalld:
+        port: 3000/tcp
+        permanent: yes
+        state: enabled
+        immediate: true
+
+    - name: reload service firewalld
+      systemd:
+        name: firewalld
+        state: reloaded
+
+    - name: Enable redis, pmproxy and grafana-server service 
+      systemd:
+        name: "{{ item }}"
+        state: restarted
+        enabled: yes
+      loop:
+        - redis
+        - pmproxy
+        - grafana-server

@@ -1,0 +1,35 @@
+---
+- name: Install PCP client
+  hosts: pcp
+  tasks:
+    - name: Install pcp-zeroconf to latest
+      yum:
+        name: pcp-zeroconf
+        state: latest
+
+    - name: Enable firewall PMCD service
+      firewalld:
+        service: pmcd
+        permanent: yes
+        state: enabled
+        immediate: true
+
+    - name: reload service firewalld
+      systemd:
+        name: firewalld
+        state: reloaded
+
+    - name: Enable Remote log 
+      lineinfile:
+        path: /etc/sysconfig/pmcd
+        regexp: '^PMCD_LOCAL='
+        line: PMCD_LOCAL=0
+
+    - name: Enable pmcd and pmlogger service 
+      systemd:
+        name: "{{ item }}"
+        state: restarted
+        enabled: yes
+      loop:
+        - pmcd
+        - pmlogger
